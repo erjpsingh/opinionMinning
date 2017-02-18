@@ -13,8 +13,13 @@ access_token <-'1111878264-X8NAa8lknRcoVwUcyeiE9RwMAJg6qiJCJ87WOmY'
 access_secret <-'kLd90mJmv2jGYvvRXowVnsz8Sl6p1G7xTZwSUzMLMtWxZ' 
 
 setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
+<<<<<<< HEAD
 AIB_tweets <- searchTwitter("@AllIndiaBakchod", n=1500, lang = "en")
 # removing retweets
+=======
+AIB_tweets <- searchTwitter("@AllIndiaBakchod", n=5, lang = "en") 
+AIB_tweets
+>>>>>>> 89790a54a341ff6d7dd395c506a0488150f4080d
 Aib_tweets_noReTweets<- strip_retweets(AIB_tweets, strip_manual = TRUE, strip_mt = TRUE)
 #Exploring Tweets.
 length(Aib_tweets_noReTweets)
@@ -26,7 +31,11 @@ AIB_tweets_text <- sapply(Aib_tweets_noReTweets, function(x)x$getText())
 class(AIB_tweets_text)
 
 #Removing unnecessary data
+<<<<<<< HEAD
 AIB_tweets_text <- AIB_tweets_text[!is.na(AIB_tweets_text)] # removing any missing values if they exist
+=======
+AIB_tweets_text <- AIB_tweets_text[!is.na(AIB_tweets_text)]
+>>>>>>> 89790a54a341ff6d7dd395c506a0488150f4080d
 AIB_tweets_text <- gsub("@\\w+", "", AIB_tweets_text)       # Removing all twitter handle
 AIB_tweets_text <- gsub("[[:digit:]]", "", AIB_tweets_text) # Removing all the digits
 AIB_tweets_text <- gsub("[[:punct:]]", "", AIB_tweets_text) # removing All the punctuation
@@ -46,6 +55,7 @@ AIB_tweets_text <- sapply(AIB_tweets_text, rmNonAlphabet)
 
 names(AIB_tweets_text) <- NULL
 
+<<<<<<< HEAD
 #have a look at refined Tweets
 head(AIB_tweets_text)
 
@@ -74,3 +84,10 @@ pos.matches
 neg.matches
 
 
+=======
+
+head(AIB_tweets_text)
+
+
+# Finally our Data is cleaned to perform Analysis
+>>>>>>> 89790a54a341ff6d7dd395c506a0488150f4080d
