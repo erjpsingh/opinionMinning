@@ -70,4 +70,7 @@ neg.matches <- match(words, neg)
 pos.matches <- !is.na(pos.matches)
 neg.matches <- !is.na(neg.matches)
 
+pos.matches
+neg.matches
+
 
