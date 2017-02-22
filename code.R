@@ -11,6 +11,7 @@ load.libraries <- function(){
   library("ROAuth")
   library("twitteR")
   library("stringr")
+  print("libraries loaded sucessfully")
 }
 
 #function to establish connection with Twitter
@@ -21,6 +22,7 @@ establish.connection <- function(){
   access_secret <-'kLd90mJmv2jGYvvRXowVnsz8Sl6p1G7xTZwSUzMLMtWxZ' 
   
   setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
+  print("connection established sucessfully")
 }
 
 #function to fetch tweets and prepare them
@@ -39,13 +41,15 @@ fetch.prepare.tweets <- function(keyword,num_tweets){
   names(tweets_text) <- NULL                          # removing the names of Array
   
   return(tweets_text)
+  
+  print("tweets fetched sucessfully")
 }
 
 #function to read necessary files
 read.files <- function(){
   pos <<- scan('positive-words.txt', what = 'character', comment.char = ';')
   neg <<- scan('negative-words.txt', what = 'character', comment.char = ';')
-  
+  print("files read sucessfully")
 }
 
 #function analyse positive and negative opinions
@@ -59,6 +63,7 @@ read.files <- function(){
     total.pos <<- sum(table(pos.matches))
     total.neg <<- sum(table(neg.matches))
     barplot(c(total.pos, total.neg), ylim = c(0,500), names.arg = c("Positive" , "Negative"), main = "Opinion Minning")
+    print("opinion generated sucessfully")
     return( (total.pos - total.neg)*100 / (total.pos + total.neg) )
     
     
@@ -78,4 +83,61 @@ read.files <- function(){
   
 
 
+# Word Map
+#http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know
 
+#Installing packages
+  
+install.packages("wordcloud")
+install.packages("tm")  
+install.packages("SnowballC")
+#loading necessary libraries
+
+library(wordcloud)
+library(tm)
+library(SnowballC)  
+
+# code
+
+generate.wordcloud <- function(){
+  
+  docs <- Corpus(VectorSource(tweets_text))
+  docs <- tm_map(x = docs, removeWords, c('the', 'this', stopwords('english')))
+  tdm <- TermDocumentMatrix(docs)
+  m <- as.matrix(tdm)
+  v <- sort(rowSums(m),decreasing=TRUE)
+  d <- data.frame(word = names(v),freq=v)
+  head(d, 10)
+  
+  wordcloud(words = d$word, freq = d$freq, min.freq = 1,
+            max.words=200, random.order=FALSE, rot.per=0.35, 
+            colors=brewer.pal(8, "Dark2"))
+  
+  
+}
+
+
+
+
+docs <- Corpus(VectorSource(tweets_text))
+tdm <- TermDocumentMatrix(docs)
+m <- as.matrix(tdm)
+v <- sort(rowSums(m),decreasing=TRUE)
+d <- data.frame(word = names(v),freq=v)
+head(d, 10)
+
+temp <- wordcloud(words = d$word, freq = d$freq, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  

@@ -10,6 +10,9 @@ load.libraries <- function(){
   library("ROAuth")
   library("twitteR")
   library("stringr")
+  library(wordcloud)
+  library(tm)
+  library(SnowballC) 
   print("Required Libraries Loaded")
 }
 
@@ -62,6 +65,23 @@ read.files <- function(){
   print("Files Loaded")
 }
 
+#function to generate word cloud
+generate.wordcloud <- function(){
+  docs <- Corpus(VectorSource(tweets_text))
+  docs <- tm_map(x = docs, removeWords, c('the', 'this', stopwords('english')))
+  tdm <- TermDocumentMatrix(docs)
+  m <- as.matrix(tdm)
+  v <- sort(rowSums(m),decreasing=TRUE)
+  d <- data.frame(word = names(v),freq=v)
+  head(d, 10)
+  
+  wordcloud(words = d$word, freq = d$freq, min.freq = 1,
+            max.words=200, random.order=FALSE, rot.per=0.35, 
+            colors=brewer.pal(8, "Dark2"))
+  
+  
+}
+
 
 
 library(shiny)
@@ -76,13 +96,18 @@ ui <- fluidPage(
       sidebarPanel(
                     textInput(inputId = "keyword", label = "Enter Keyword", value = ""),
                     actionButton(inputId = "submit_btn", label = "Generate Opinion"),
+                    actionButton(inputId = "wordcloud_btn", label = "Generate Word Cloud"),
                     plotOutput(outputId = "bar_plot")
+                    
                    
                    
                    ),
       
       # Show a main output here
-      mainPanel(textOutput(outputId = "outputId"))
+      mainPanel(
+        textOutput(outputId = "outputId"),plotOutput(outputId = "wc_img")
+        )
+      
                 
    )
 )
@@ -94,12 +119,20 @@ server <- function(input, output) {
    
    output$outputId <- renderText({data()})
    
+   
    observeEvent(input$submit_btn, {
                                   
                                   
                                   opinion.mining(data())
      output$bar_plot <- renderPlot({barplot(c(total.pos, total.neg), ylim = c(0,500), names.arg = c("Positive" , "Negative"), main = "Opinion Minning")})
                                 })
+   observeEvent(input$wordcloud_btn, {
+                                  
+    output$wc_img <-  renderPlot({
+      generate.wordcloud()
+    }
+   )
+     })
    
    
 }
