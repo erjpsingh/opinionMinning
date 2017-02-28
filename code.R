@@ -2,6 +2,9 @@
 install.packages("ROAuth")
 install.packages("twitteR")
 install.packages("stringr")
+install.packages("wordcloud")
+install.packages("tm")  
+install.packages("SnowballC")
 
 
 "Now lets implement a modular approach"
@@ -69,28 +72,12 @@ read.files <- function(){
     
   }
   
-  
-  
-  
-  ##################################################################################################
-  # trying to make histogram of words.
-  tbl <- table(pos.matches)
-  hdr <- as.integer(names(tbl))
-  barplot(rev(tbl), names.arg = pos[hdr], horiz = TRUE)
-  
-  #Simple barplot of positive and negative opinions
-  barplot(c(total.pos, total.neg), ylim = c(0,500))
-  
-
-
 # Word Map
 #http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know
 
 #Installing packages
   
-install.packages("wordcloud")
-install.packages("tm")  
-install.packages("SnowballC")
+
 #loading necessary libraries
 
 library(wordcloud)
@@ -116,19 +103,19 @@ generate.wordcloud <- function(){
   
 }
 
+# lets implement an ALGORITHMIA approach.
+
+install.packages("algorithmia")
+library(algorithmia)
+
+input <- list(document =  fetch.prepare.tweets("#abvp", 1))
+client <- getAlgorithmiaClient("simj7yggQAPt2GS/yKhxZlnbHXp1")
+algo <- client$algo("nlp/SentimentAnalysis/1.0.3")
+result <- algo$pipe(input)$result
+print(result)
 
 
 
-docs <- Corpus(VectorSource(tweets_text))
-tdm <- TermDocumentMatrix(docs)
-m <- as.matrix(tdm)
-v <- sort(rowSums(m),decreasing=TRUE)
-d <- data.frame(word = names(v),freq=v)
-head(d, 10)
-
-temp <- wordcloud(words = d$word, freq = d$freq, min.freq = 1,
-          max.words=200, random.order=FALSE, rot.per=0.35, 
-          colors=brewer.pal(8, "Dark2"))
   
   
   
