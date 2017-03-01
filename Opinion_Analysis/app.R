@@ -3,6 +3,7 @@ opinion.mining <- function(keyword){
   read.files()
   establish.connection()
   fetch.prepare.tweets(keyword)
+  generate.opinion()
  }
 
 #load necessary libraries
@@ -13,6 +14,7 @@ load.libraries <- function(){
   library(wordcloud)
   library(tm)
   library(SnowballC) 
+  library(algorithmia)
   print("Required Libraries Loaded")
 }
 
@@ -28,7 +30,7 @@ establish.connection <- function(){
 }
 
 #function to fetch tweets and prepare them
-fetch.prepare.tweets <- function(keyword,num_tweets = 1500){
+fetch.prepare.tweets <- function(keyword,num_tweets = 500){
   tweets <- searchTwitter(keyword, num_tweets, lang = "en")
   #preparing tweets
   tweets_noReTweets<- strip_retweets(tweets, strip_manual = TRUE, strip_mt = TRUE) #eleminating re tweets
@@ -41,20 +43,49 @@ fetch.prepare.tweets <- function(keyword,num_tweets = 1500){
   tweets_text <<- iconv(tweets_text, 'UTF-8', 'ASCII') # converting to ASCII and hence removing emoji.
   tweets_text <<- tweets_text[!is.na(tweets_text)]     # removing any missing values if they exist
   names(tweets_text) <- NULL                          # removing the names of Array
+  tweets_text <<- tweets_text
+  n <<- length(tweets_text)
+  return(tweets_text)
   
-  words.list <<- str_split(tweets_text, " ")
-  w <<- unlist(words.list)
-  pos.matches <<- match(w , pos)
-  neg.matches <<- match(w, neg)
+  print("tweets fetched sucessfully")
+}
+generate.opinion <- function(){
   
-  total.pos <<- sum(table(pos.matches))
-  total.neg <<- sum(table(neg.matches))
-  barplot(c(total.pos, total.neg), ylim = c(0,500), names.arg = c("Positive" , "Negative"), main = "Opinion Minning")
-  print("Opinion Analysis performed")
+  client <- getAlgorithmiaClient("simj7yggQAPt2GS/yKhxZlnbHXp1")
+  algo <- client$algo("nlp/SentimentAnalysis/1.0.3")
   
-  return( (total.pos - total.neg)*100 / (total.pos + total.neg) )
+  result <- NULL
+  # this logic adds sentiments to a array   
+  for(i in 1:length(tweets_text)){
+    input <- list(document=tweets_text[i])
+    result[i] <- algo$pipe(input)$result
+    print(result)
+  }
+  
+  # aplly counters
+  # -1 : -0.5 very negative
+  # -0.5 : 0  negative
+  # 0 : 0.5   positive
+  # 0.5 : 1   very positive
+  very_negative <<- 0
+  negative <<-0
+  neutral <<- 0
+  positive <<-0
+  very_positive <<-0
+  
+  for(i in 1:length(tweets_text)){
+    print(result[[i]]$sentiment)
+    ifelse(result[[i]]$sentiment >=-1 & result[[i]]$sentiment < -0.5 ,very_negative<<-1 + very_negative ,NA )
+    ifelse(result[[i]]$sentiment >=-0.5 & result[[i]]$sentiment < 0 ,negative<<- 1 + negative ,NA )
+    ifelse(result[[i]]$sentiment == 0  ,neutral<<-1 + neutral ,NA )
+    ifelse(result[[i]]$sentiment > 0 & result[[i]]$sentiment <= 0.5 ,positive<<- 1 + positive ,NA )
+    ifelse(result[[i]]$sentiment > 0.5 & result[[i]]$sentiment <= 1 ,very_positive<<- 1 + very_positive ,NA )
+    
+    
+  }
   
  
+  #bar.output <<-barplot(c(very_negative, negative, neutral, positive, very_positive), ylim = c(0,n), names.arg = c("Very Negative", "Negative", " Neutral" , "Positive", "Very Positive"), main = "Opinion Minning")
   
 }
 
@@ -96,8 +127,8 @@ ui <- fluidPage(
       sidebarPanel(
                     textInput(inputId = "keyword", label = "Enter Keyword", value = ""),
                     actionButton(inputId = "submit_btn", label = "Generate Opinion"),
-                    actionButton(inputId = "wordcloud_btn", label = "Generate Word Cloud"),
-                    plotOutput(outputId = "bar_plot")
+                    actionButton(inputId = "wordcloud_btn", label = "Generate Word Cloud")
+                   
                     
                    
                    
@@ -105,6 +136,8 @@ ui <- fluidPage(
       
       # Show a main output here
       mainPanel(
+        
+        plotOutput(outputId = "bar_plot"),
         textOutput(outputId = "outputId"),plotOutput(outputId = "wc_img")
         )
       
@@ -124,7 +157,7 @@ server <- function(input, output) {
                                   
                                   
                                   opinion.mining(data())
-     output$bar_plot <- renderPlot({barplot(c(total.pos, total.neg), ylim = c(0,500), names.arg = c("Positive" , "Negative"), main = "Opinion Minning")})
+       output$bar_plot <- renderPlot({barplot(c(very_negative, negative, neutral, positive, very_positive), ylim = c(0,length(tweets_text)), names.arg = c("Very Negative", "Negative", " Neutral" , "Positive", "Very Positive"), main = "Opinion Minning")})
                                 })
    observeEvent(input$wordcloud_btn, {
                                   

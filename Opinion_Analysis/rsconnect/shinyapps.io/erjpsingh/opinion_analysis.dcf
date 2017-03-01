@@ -3,6 +3,8 @@ title:
 account: erjpsingh
 server: shinyapps.io
 appId: 158385
-bundleId: 721051
+bundleId: 730019
 url: https://erjpsingh.shinyapps.io/opinion_analysis/
-when: 1487792628.50524
+when: 1488398000.98923
+asMultiple: FALSE
+asStatic: FALSE

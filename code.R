@@ -5,6 +5,7 @@ install.packages("stringr")
 install.packages("wordcloud")
 install.packages("tm")  
 install.packages("SnowballC")
+install.packages("algorithmia")
 
 
 "Now lets implement a modular approach"
@@ -14,6 +15,7 @@ load.libraries <- function(){
   library("ROAuth")
   library("twitteR")
   library("stringr")
+  library(algorithmia)
   print("libraries loaded sucessfully")
 }
 
@@ -42,7 +44,8 @@ fetch.prepare.tweets <- function(keyword,num_tweets){
   tweets_text <<- iconv(tweets_text, 'UTF-8', 'ASCII') # converting to ASCII and hence removing emoji.
   tweets_text <<- tweets_text[!is.na(tweets_text)]     # removing any missing values if they exist
   names(tweets_text) <- NULL                          # removing the names of Array
-  
+  tweets_text <<- tweets_text
+  n <<- length(tweets_text)
   return(tweets_text)
   
   print("tweets fetched sucessfully")
@@ -105,26 +108,41 @@ generate.wordcloud <- function(){
 
 # lets implement an ALGORITHMIA approach.
 
-install.packages("algorithmia")
-library(algorithmia)
-
-input <- list(document =  fetch.prepare.tweets("#abvp", 1))
+generate.opinion <- function(){
 client <- getAlgorithmiaClient("simj7yggQAPt2GS/yKhxZlnbHXp1")
 algo <- client$algo("nlp/SentimentAnalysis/1.0.3")
-result <- algo$pipe(input)$result
+
+result <- NULL
+# this logic adds sentiments to a array   
+for(i in 1:length(tweets_text)){
+input <- list(document=tweets_text[i])
+result[i] <- algo$pipe(input)$result
 print(result)
+}
 
+# aplly counters
+# -1 : -0.5 very negative
+# -0.5 : 0  negative
+# 0 : 0.5   positive
+# 0.5 : 1   very positive
+very_negative <- 0
+negative <-0
+neutral <- 0
+positive <-0
+very_positive <-0
+for(i in 1:length(tweets_text)){
+  print(result[[i]]$sentiment)
+  ifelse(result[[i]]$sentiment >=-1 & result[[i]]$sentiment < -0.5 ,very_negative<-1 + very_negative ,NA )
+  ifelse(result[[i]]$sentiment >=-0.5 & result[[i]]$sentiment < 0 ,negative<- 1 + negative ,NA )
+  ifelse(result[[i]]$sentiment == 0  ,neutral<-1 + neutral ,NA )
+  ifelse(result[[i]]$sentiment > 0 & result[[i]]$sentiment <= 0.5 ,positive<- 1 + positive ,NA )
+  ifelse(result[[i]]$sentiment > 0.5 & result[[i]]$sentiment <= 1 ,very_positive<- 1 + very_positive ,NA )
+}
 
+array.output <- c(very_negative, negative, neutral, positive, very_positive)
+barplot(array.output, ylim = c(0,length(tweets_text)), names.arg = c("Very Negative", "Negative", " Neutral" , "Positive", "Very Positive"), main = "Opinion Minning")
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
+}
   
   
   
