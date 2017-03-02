@@ -15,7 +15,7 @@ load.libraries <- function(){
   library("ROAuth")
   library("twitteR")
   library("stringr")
-  library(algorithmia)
+  library("algorithmia")
   print("libraries loaded sucessfully")
 }
 
@@ -51,29 +51,9 @@ fetch.prepare.tweets <- function(keyword,num_tweets){
   print("tweets fetched sucessfully")
 }
 
-#function to read necessary files
-read.files <- function(){
-  pos <<- scan('positive-words.txt', what = 'character', comment.char = ';')
-  neg <<- scan('negative-words.txt', what = 'character', comment.char = ';')
-  print("files read sucessfully")
-}
 
-#function analyse positive and negative opinions
 
-  positive.negative.opiniion <- function(refined.tweets, pos, neg){
-    words.list <<- str_split(refined.tweets, " ")
-    w <<- unlist(words.list)
-    pos.matches <<- match(w , pos)
-    neg.matches <<- match(w, neg)
-    
-    total.pos <<- sum(table(pos.matches))
-    total.neg <<- sum(table(neg.matches))
-    barplot(c(total.pos, total.neg), ylim = c(0,500), names.arg = c("Positive" , "Negative"), main = "Opinion Minning")
-    print("opinion generated sucessfully")
-    return( (total.pos - total.neg)*100 / (total.pos + total.neg) )
-    
-    
-  }
+
   
 # Word Map
 #http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know
@@ -109,18 +89,27 @@ generate.wordcloud <- function(){
 # lets implement an ALGORITHMIA approach.
 
 generate.opinion <- function(){
+  
+# Setting up initialls for ALGORITHMIA
 client <- getAlgorithmiaClient("simj7yggQAPt2GS/yKhxZlnbHXp1")
 algo <- client$algo("nlp/SentimentAnalysis/1.0.3")
 
-result <- NULL
+# Initialising values
+result <<- NULL
+very_negative_tweets <<- NULL
+negative_tweets <<- NULL
+neutral_tweets <<- NULL
+positive_tweets <<- NULL
+very_positive_tweets <<- NULL
+
 # this logic adds sentiments to a array   
 for(i in 1:length(tweets_text)){
 input <- list(document=tweets_text[i])
-result[i] <- algo$pipe(input)$result
+result[i] <<- algo$pipe(input)$result
 print(result)
 }
 
-# aplly counters
+# apply counters
 # -1 : -0.5 very negative
 # -0.5 : 0  negative
 # 0 : 0.5   positive
@@ -130,19 +119,35 @@ negative <-0
 neutral <- 0
 positive <-0
 very_positive <-0
+
 for(i in 1:length(tweets_text)){
-  print(result[[i]]$sentiment)
+  #print(result[[i]]$sentiment)
   ifelse(result[[i]]$sentiment >=-1 & result[[i]]$sentiment < -0.5 ,very_negative<-1 + very_negative ,NA )
   ifelse(result[[i]]$sentiment >=-0.5 & result[[i]]$sentiment < 0 ,negative<- 1 + negative ,NA )
   ifelse(result[[i]]$sentiment == 0  ,neutral<-1 + neutral ,NA )
   ifelse(result[[i]]$sentiment > 0 & result[[i]]$sentiment <= 0.5 ,positive<- 1 + positive ,NA )
   ifelse(result[[i]]$sentiment > 0.5 & result[[i]]$sentiment <= 1 ,very_positive<- 1 + very_positive ,NA )
+  
+  # Adding origional tweets itself
+  ifelse(result[[i]]$sentiment >=-1 & result[[i]]$sentiment < -0.5 ,very_negative_tweets[i]<<-result[[i]]$document,"NA" )
+  ifelse(result[[i]]$sentiment >=-0.5 & result[[i]]$sentiment < 0 ,negative_tweets[i]<<-result[[i]]$document,"NA" )
+  ifelse(result[[i]]$sentiment == 0  , neutral_tweets[i]<<-result[[i]]$document, "NA")
+  ifelse(result[[i]]$sentiment >0 & result[[i]]$sentiment <= 0.5 ,positive_tweets[i]<<-result[[i]]$document,"NA" )
+  ifelse(result[[i]]$sentiment > 0.5 & result[[i]]$sentiment <= 1 ,very_positive_tweets[i]<<-result[[i]]$document, "NA")
 }
+
+# further processing the tweets.
+very_negative_tweets <<- very_negative_tweets[!is.na(very_negative_tweets)]
+negative_tweets <<- negative_tweets[!is.na(negative_tweets)]
+neutral_tweets <<- neutral_tweets[!is.na(neutral_tweets)]
+positive_tweets <<- positive_tweets[!is.na(positive_tweets)]
+very_positive_tweets <<- very_positive_tweets[!is.na(very_positive_tweets)]
 
 array.output <- c(very_negative, negative, neutral, positive, very_positive)
 barplot(array.output, ylim = c(0,length(tweets_text)), names.arg = c("Very Negative", "Negative", " Neutral" , "Positive", "Very Positive"), main = "Opinion Minning")
 
 }
   
-  
-  
+
+
+    
