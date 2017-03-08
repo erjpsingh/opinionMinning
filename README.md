@@ -31,3 +31,6 @@ I have tried to implement modular approach in my code ie i have created differen
 ####Acknowledgements
 I am thankfull to Twitter Developers for providing data and also for Algorithmia who designed algorithms which enabled me to start this side project 
 
+
+#####NOTE
+The Sentiment Analysis algo provided by ALGORITHMIA is not open source 
