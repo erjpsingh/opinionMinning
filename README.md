@@ -1,5 +1,5 @@
 
-Minning Twitter data with R
+## Minning Twitter data with R
 ### Introduction
 We all have been using Twitter for broadcasting text , that text may be a news item or promotional status of a product. We often like following significant people on twitter . So twitter is something which has become an inevitable part of our sophisticated life.But, you may not know it's a platform for Sentiment Analysis.
 ### About this Project
